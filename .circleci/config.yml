@@ -24,18 +24,17 @@ jobs:
             exit 1
           when: on_fail
             
-  zap_baseline:
+  nuclei:
     machine: true
     steps:
       - checkout
 
       - run: |
-          docker pull softwaresecurityproject/zap-stable:2.14.0
-          docker run --user root --rm -v $(pwd):/zap/wrk:rw -w /zap softwaresecurityproject/zap-stable:2.14.0 zap-baseline.py -t ${PROD_URL} -J zap-output.json || true
+          docker run --user $(id -u):$(id -g) -w /nuclei -v $(pwd):/nuclei:rw --rm projectdiscovery/nuclei:v2.9.6 -u https://prod-el5mvrlf.stg.lab.practical-devsecops.training -j -o nuclei-output.json
 
       - store_artifacts:
-          path: zap-output.json
-          destination: zap-artifact
+          path: nuclei-output.json
+          destination: nuclei-artifact
 
   prod:
     docker:
@@ -55,10 +54,10 @@ workflows:
       - integration:
           requires:
             - test
-      - zap_baseline:
+      - nuclei:
           requires:
             - integration
       - prod:
           type: approval
           requires:
-            - zap_baseline
+            - nuclei
