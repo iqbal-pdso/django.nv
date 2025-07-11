@@ -28,13 +28,6 @@ jobs:
             exit 1
           when: always                    # Even if the job fails, continue to the next stages
 
-  prod:
-    docker:
-      - image: python:3.6
-    steps:
-      - checkout
-      - run: echo "This is a 'deploy' step."
-      
   release:
     docker:
       - image: cimg/base:stable                   # What is this for?
@@ -45,6 +38,13 @@ jobs:
           docker build -t $DOCKER_USERNAME/django.nv .   # Build the application into Docker image
           docker push $DOCKER_USERNAME/django.nv         # Push the image into registry
 
+  prod:
+    docker:
+      - image: python:3.6
+    steps:
+      - checkout
+      - run: echo "This is a 'deploy' step."
+
 workflows:
   version: 2
   django:
@@ -52,6 +52,7 @@ workflows:
       - build
       - test
       - integration
+      - release
       - prod:
           type: approval
           requires:
