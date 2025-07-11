@@ -29,8 +29,7 @@ jobs:
           when: always                    # Even if the job fails, continue to the next stages
 
   release:
-    docker:
-      - image: cimg/base:stable                   # What is this for?
+    machine: true                                        # What is this for?
     steps:
       - checkout
 
