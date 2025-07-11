@@ -29,7 +29,7 @@ jobs:
       - run:
           name: Run RetireJS
           command: |
-            docker run --rm -v $(pwd):/src -w /src hysnsec/retire --outputformat json --outputpath retirejs-output.json --severity high || true
+            docker run --rm -v $(pwd):/src -w /src hysnsec/retire --outputformat json --outputpath retirejs-output.json --severity high
 
       - store_artifacts:
           path: retirejs-output.json
