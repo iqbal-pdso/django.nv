@@ -54,7 +54,7 @@ workflows:
             - build
       - integration:
           requires:
-            - secret_scanning
+            - test
       - zap_baseline:
           requires:
             - integration
