@@ -1,21 +1,15 @@
 jobs:
   build:
-    docker:
-      - image: cimg/base:stable                   # similar to "image" in GitLab
     steps:
       - checkout
       - run: echo "This is a build step"          # similar to "script" in GitLab
 
   test:
-    docker:
-      - image: cimg/base:stable
     steps:
       - checkout
       - run: echo "This is a test step"
 
   integration:
-    docker:
-      - image: cimg/base:stable
     steps:
       - checkout
       - run:
@@ -34,8 +28,6 @@ jobs:
           docker push $DOCKER_USERNAME/django.nv         # Push the image into registry
 
   prod:
-    docker:
-      - image: cimg/base:stable
     steps:
       - checkout
       - run: echo "This is a deploy step"
