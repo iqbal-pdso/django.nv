@@ -1,48 +1,48 @@
 jobs:
   build:
     docker:
-      - image: python:3.6                   # similar to "image" in GitLab
+      - image: cimg/base:stable                   # similar to "image" in GitLab
     steps:
       - checkout
-      - run: |                              # similar to "script" in GitLab
-          pip install -r requirements.txt
-          python manage.py check
+      - run: echo "This is a build step"          # similar to "script" in GitLab
 
   test:
     docker:
-      - image: python:3.6
+      - image: cimg/base:stable
     steps:
       - checkout
-      - run: |
-          pip install -r requirements.txt
-          python manage.py test taskManager
-
-  semgrep:
-    machine: true
-    steps:
-      - checkout
-      - run: docker run --rm -v ${PWD}:/src returntocorp/semgrep semgrep --config auto --output semgrep-output.json --json || true
-      - store_artifacts:
-          path: semgrep-output.json
-          destination: semgrep-artifact
+      - run: echo "This is a test step"
 
   integration:
     docker:
-      - image: python:3.6
+      - image: cimg/base:stable
     steps:
       - checkout
       - run:
           command: |
             echo "This is an integration step"
             exit 1
-          when: on_fail         # Even if the job fails, continue to the next stages
+          when: on_fail
+            
+  zap_baseline:
+    machine: true
+    steps:
+      - checkout
+
+      - run: |
+          docker pull softwaresecurityproject/zap-stable:2.14.0
+          docker run --user root --rm -v $(pwd):/zap/wrk:rw -w /zap softwaresecurityproject/zap-stable:2.14.0 zap-baseline.py -t ${PROD_URL} -J zap-output.json || true
+
+      - store_artifacts:
+          path: zap-output.json
+          destination: zap-artifact
 
   prod:
     docker:
-      - image: python:3.6
+      - image: cimg/base:stable
     steps:
       - checkout
-      - run: echo "This is a deploy step."
+      - run: echo "This is a deploy step"
 
 workflows:
   version: 2
@@ -52,13 +52,13 @@ workflows:
       - test:
           requires:
             - build
-      - semgrep:
-          requires:
-            - test
       - integration:
           requires:
-            - semgrep
+            - secret_scanning
+      - zap_baseline:
+          requires:
+            - integration
       - prod:
           type: approval
           requires:
-            - integration
+            - zap_baseline
