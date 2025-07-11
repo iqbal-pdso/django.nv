@@ -1,32 +1,27 @@
 jobs:
   build:
     docker:
-      - image: python:3.6                   # similar to "image" in GitLab
+      - image: cimg/base:stable                   # similar to "image" in GitLab
     steps:
       - checkout
-      - run: |                              # similar to "script" in GitLab
-          pip install -r requirements.txt
-          python manage.py check
+      - run: echo "This is a build step"          # similar to "script" in GitLab
 
   test:
     docker:
-      - image: python:3.6
+      - image: cimg/base:stable
     steps:
       - checkout
-      - run: |
-          pip install -r requirements.txt
-          python manage.py test taskManager
+      - run: echo "This is a test step"
 
   integration:
     docker:
-      - image: python:3.6
+      - image: cimg/base:stable
     steps:
       - checkout
       - run:
           command: |
             echo "This is an integration step"
             exit 1
-          when: always                    # Even if the job fails, continue to the next stages
 
   release:
     machine: true                                        # What is this for?
@@ -34,15 +29,16 @@ jobs:
       - checkout
 
       - run: |
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
           docker build -t $DOCKER_USERNAME/django.nv .   # Build the application into Docker image
           docker push $DOCKER_USERNAME/django.nv         # Push the image into registry
 
   prod:
     docker:
-      - image: python:3.6
+      - image: cimg/base:stable
     steps:
       - checkout
-      - run: echo "This is a 'deploy' step."
+      - run: echo "This is a deploy step"
 
 workflows:
   version: 2
@@ -51,7 +47,6 @@ workflows:
       - build
       - test
       - integration
-      - release
       - prod:
           type: approval
           requires:
