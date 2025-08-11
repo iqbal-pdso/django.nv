@@ -23,6 +23,18 @@ jobs:
             echo "This is an integration step"
             exit 1
           when: on_fail                 # Even if the job fails, continue to the next stages
+          
+  nuclei:
+    machine: true
+    steps:
+      - checkout
+
+      - run: |
+          docker run --user $(id -u):$(id -g) -w /nuclei -v $(pwd):/nuclei:rw --rm projectdiscovery/nuclei:v2.9.6 -u https://prod-n7efbkz0.lab.practical-devsecops.training -j -o nuclei-output.json
+
+      - store_artifacts:
+          path: nuclei-output.json
+          destination: nuclei-artifact
 
   prod:
     docker:
@@ -36,7 +48,16 @@ workflows:
   django:
     jobs:
       - build
-      - test
-      - integration
+      - test:
+          requires:
+            - build
+      - integration:
+          requires:
+            - test
+      - nuclei:
+          requires:
+            - integration
       - prod:
           type: approval
+          requires:
+            - nuclei
